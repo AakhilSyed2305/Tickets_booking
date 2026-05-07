@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeClashTix - College Fest Booking</title>
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f5;
+            --header-bg: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --heading-color: #343a40;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --primary-color: #6741d9;
+            --primary-color-hover: #5f3dc4;
+            --secondary-color: #1c7ed6;
+            --seat-available-bg: #adb5bd;
+            --seat-available-border: #909296;
+            --seat-selected-bg: #1864ab;
+            --seat-booked-bg: #495057;
+            --seat-hover-bg: #74c0fc;
+            --error-color: #fa5252;
+            --success-color: #40c057;
+        }
+
+        .dark-theme {
+            --bg-primary: #212529;
+            --bg-secondary: #2c313a;
+            --bg-tertiary: #373b43;
+            --header-bg: #212529;
+            --text-primary: #f8f9fa;
+            --text-secondary: #adb5bd;
+            --heading-color: #f8f9fa;
+            --border-color: #495057;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --primary-color: #a476f7;
+            --primary-color-hover: #9865f5;
+            --secondary-color: #74c0fc;
+            --seat-available-bg: #495057;
+            --seat-available-border: #6c757d;
+            --seat-selected-bg: #4dabf7;
+            --seat-booked-bg: #6c757d;
+            --seat-hover-bg: #1c7ed6;
+            --error-color: #ff8787;
+            --success-color: #69db7c;
+        }
+
+        /* --- GENERAL STYLES --- */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: var(--text-primary);
+            padding: 15px 30px;
+            text-align: center;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px var(--shadow-color);
+            transition: background 0.3s, box-shadow 0.3s;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: var(--heading-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        /* --- EVENT CARD --- */
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .event-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+
+        .event-card-image {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .event-card-content {
+            padding: 20px;
+        }
+
+        .event-card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+            color: var(--heading-color);
+        }
+
+        .event-summary {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            line-height: 1.5;
+            min-height: 60px;
+            /* Prevent layout shift */
+        }
+
+        /* --- BUTTONS & INPUTS --- */
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 28px;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--primary-color-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+        }
+
+        .btn-danger:hover {
+            background: #e03131;
+        }
+
+        .login-box {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input[type=text],
+        input[type=password],
+        textarea {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 14px;
+            width: 100%;
+            margin: 10px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type=text]:focus,
+        input[type=password]:focus,
+        textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+            outline: none;
+        }
+
+        /* --- SEAT SELECTION --- */
+        .seat-selection-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stage {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 10px 0;
+            width: 80%;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 0 0 10px 10px;
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .seat {
+            aspect-ratio: 1 / 1;
+            border: 1px solid var(--seat-available-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: var(--seat-available-bg);
+        }
+
+        .seat.selected {
+            background: var(--seat-selected-bg);
+            color: white;
+            border-color: var(--seat-selected-bg);
+            transform: scale(1.1);
+        }
+
+        .seat.booked {
+            background: var(--seat-booked-bg);
+            color: #fff;
+            cursor: not-allowed;
+            border-color: var(--seat-booked-bg);
+        }
+
+        .seat:not(.booked):hover {
+            background: var(--seat-hover-bg);
+            border-color: var(--secondary-color);
+        }
+
+        .seat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-item .seat {
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        /* --- TICKET --- */
+        .ticket {
+            background: var(--bg-tertiary);
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .ticket-details p {
+            margin: 8px 0;
+        }
+
+        .ticket-details b {
+            color: var(--text-primary);
+        }
+
+        .ticket-qr {
+            text-align: center;
+        }
+
+        .ticket-qr #qrcode {
+            background: white;
+            padding: 10px;
+            display: inline-block;
+            border-radius: 8px;
+        }
+
+        .ticket-screen h2 {
+            font-size: 1.8rem;
+            text-align: center;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .ticket-screen p.thank-you-msg {
+            text-align: center;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        .error-msg {
+            color: var(--error-color);
+            font-size: 14px;
+            margin-top: -5px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        /* --- PROFILE --- */
+        .profile-container {
+            display: grid;
+            gap: 25px;
+        }
+
+        .profile-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            color: var(--heading-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .profile-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .profile-section input[type="text"] {
+            margin-top: 0;
+        }
+
+        .profile-section p,
+        .profile-section div {
+            margin-bottom: 10px;
+        }
+
+        .profile-section .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .language-list,
+        .ticket-list,
+        .theme-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ticket-list li {
+            background: var(--bg-primary);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+
+        .ticket-list li p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .ticket-list li p b {
+            color: var(--text-primary);
+        }
+
+        .theme-list {
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-list li {
+            flex-grow: 1;
+        }
+
+        .theme-btn {
+            width: 100%;
+            display: block;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .theme-btn:hover {
+            background: var(--border-color);
+            transform: translateY(-2px);
+        }
+
+        .theme-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* --- MODAL --- */
+        .modal {
+            position: fixed;
+            z-index: 200;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+
+        .modal.open .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            font-size: 1.8rem;
+            color: var(--heading-color);
+        }
+
+        .modal ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .modal ul li {
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .modal .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--primary-color);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- Toast Message --- */
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--success-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 300;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .toast-message.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-10px);
+        }
+
+        .toast-message.error {
+            background-color: var(--error-color);
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(8, 1fr);
+            }
+
+            .ticket {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .ticket-qr {
+                grid-row: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>CodeClashTix</h1>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- LOGIN -->
+            <div id="login-screen" class="screen active">
+                <div class="login-box">
+                    <h2>Welcome Back!</h2>
+                    <p>Login to book your tickets for the fest.</p>
+                    <input type="text" id="emailPhone" placeholder="Email or Phone Number" autocomplete="off" /><br>
+                    <div id="emailPhone-error" class="error-msg">Please enter a valid email or 10-digit phone number.
+                    </div>
+                    <input type="password" id="password" placeholder="Password (8-12 characters)"
+                        autocomplete="off" /><br>
+                    <div id="password-error" class="error-msg">Password must be 8 to 12 characters long.</div>
+                    <button class="btn" id="login-btn" style="width: 100%;">Login</button>
+                </div>
+            </div>
+
+            <!-- EVENTS -->
+            <div id="event-screen" class="screen">
+                <h2>Available Events</h2>
+                <div class="event-grid">
+                    <div class="event-card">
+                        <div class="event-card-image"
+                            style="background-image: url('https://placehold.co/600x300/6741d9/ffffff?text=Music+Night');">
+                        </div>
+                        <div class="event-card-content">
+                            <h3>🎶 Music Night</h3>
+                            <p>Enjoy live performances by top bands and artists.</p>
+                            <p class="event-summary" id="music-night-summary"></p>
+                            <button class="btn" onclick="selectEvent('Music Night')">Book Now</button>
+                            <button class="btn btn-secondary" onclick="generateEventSummary('Music Night')">✨ Get Event
+                                Summary</button>
+                        </div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-card-image"
+                            style="background-image: url('https://placehold.co/600x300/1c7ed6/ffffff?text=Drama+Show');">
+                        </div>
+                        <div class="event-card-content">
+                            <h3>🎭 Drama Show</h3>
+                            <p>Experience captivating theatrical acts by talented students.</p>
+                            <p class="event-summary" id="drama-show-summary"></p>
+                            <button class="btn" onclick="selectEvent('Drama Show')">Book Now</button>
+                            <button class="btn btn-secondary" onclick="generateEventSummary('Drama Show')">✨ Get Event
+                                Summary</button>
+                        </div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-card-image"
+                            style="background-image: url('https://placehold.co/600x300/e67700/ffffff?text=Comedy+Fest');">
+                        </div>
+                        <div class="event-card-content">
+                            <h3>✨ Stand-up Comedy</h3>
+                            <p>Laugh out loud with an amazing lineup of comics!</p>
+                            <p class="event-summary" id="stand-up-comedy-summary"></p>
+                            <button class="btn" onclick="selectEvent('Stand-up Comedy')">Book Now</button>
+                            <button class="btn btn-secondary" onclick="generateEventSummary('Stand-up Comedy')">✨ Get
+                                Event Summary</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="showProfile()">My Profile</button>
+                    <button class="btn btn-danger" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <!-- SEAT SELECTION -->
+            <div id="seat-screen" class="screen">
+                <h2 id="event-title"></h2>
+                <div class="seat-selection-layout">
+                    <div class="stage">STAGE</div>
+                    <div class="grid" id="seat-grid"></div>
+                    <p id="selected-count" style="font-weight:bold; margin-bottom: 10px;"></p>
+                </div>
+                <div class="seat-legend">
+                    <div class="legend-item">
+                        <div class="seat"></div> Available
+                    </div>
+                    <div class="legend-item">
+                        <div class="seat selected"></div> Selected
+                    </div>
+                    <div class="legend-item">
+                        <div class="seat booked"></div> Booked
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn" id="confirm-btn" onclick="confirmBooking()" disabled>Confirm Booking</button>
+                    <button class="btn btn-secondary" onclick="goBackToEvents()">Back to Events</button>
+                </div>
+            </div>
+
+            <!-- TICKET -->
+            <div id="ticket-screen" class="screen ticket-screen">
+                <h2 id="ticket-header"></h2>
+                <p class="thank-you-msg" id="thank-you-message"></p>
+                <div class="ticket">
+                    <div class="ticket-details">
+                        <p><b>User:</b> <span id="ticket-user"></span></p>
+                        <p><b>Show:</b> <span id="ticket-event"></span></p>
+                        <p><b>Event Date:</b> <span id="ticket-date"></span></p>
+                        <p><b>Event Time:</b> <span id="ticket-time"></span></p>
+                        <p><b>Seats:</b> <span id="ticket-seats"></span></p>
+                        <p><b>Booking ID:</b> <span id="ticket-booking-id"></span></p>
+                    </div>
+                    <div class="ticket-qr">
+                        <div id="qrcode"></div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="resetBooking()">Book Another Ticket</button>
+                    <button class="btn btn-secondary" onclick="downloadPDF()">Download PDF</button>
+                    <button class="btn" onclick="getEventIdeas()">✨ Get Event Ideas</button>
+                </div>
+            </div>
+
+            <!-- PROFILE -->
+            <div id="profile-screen" class="screen">
+                <h2>My Profile</h2>
+                <div class="profile-container">
+                    <div class="profile-section">
+                        <h3>Personal Info</h3>
+                        <div>
+                            <p><b>Username:</b> <span id="profile-username"></span></p>
+                            <label for="profile-name">Full Name</label>
+                            <input type="text" id="profile-name" placeholder="Enter your full name">
+                            <label for="profile-phone">Phone Number</label>
+                            <input type="text" id="profile-phone" placeholder="Enter your phone number">
+                            <button class="btn" onclick="savePersonalInfo()">Save Info</button>
+                        </div>
+                    </div>
+                    <div class="profile-section">
+                        <h3>My Booked Tickets</h3>
+                        <div id="booked-tickets-list">
+                            <ul class="ticket-list">
+                                <!-- Tickets will be dynamically added here -->
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="profile-section">
+                        <h3>Themes</h3>
+                        <p>Change the app's appearance.</p>
+                        <ul class="theme-list">
+                            <li><button class="theme-btn" data-theme="light">Light</button></li>
+                            <li><button class="theme-btn" data-theme="dark">Dark</button></li>
+                            <li><button class="theme-btn" data-theme="system">System</button></li>
+                        </ul>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goBackToEvents()">Back to Events</button>
+                        <button class="btn btn-danger" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 CodeClashTix. All rights reserved.</p>
+    </footer>
+
+    <!-- Global Message Toast -->
+    <div id="toast-message" class="toast-message"></div>
+
+    <!-- Modal for AI Content -->
+    <div id="ai-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h3 id="modal-title"></h3>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- QR & PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // --- APP LOGIC ---
+        const eventDetails = {
+            "Music Night": {
+                date: "2025-09-10",
+                time: "7:00 PM"
+            },
+            "Drama Show": {
+                date: "2025-09-11",
+                time: "6:00 PM"
+            },
+            "Stand-up Comedy": {
+                date: "2025-09-12",
+                time: "8:00 PM"
+            }
+        };
+        let currentUser = null,
+            currentEvent = null,
+            selectedSeats = [],
+            bookingId = null;
+
+        const seatGrid = document.getElementById('seat-grid');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const emailPhoneInput = document.getElementById('emailPhone');
+        const passwordInput = document.getElementById('password');
+        const emailPhoneError = document.getElementById('emailPhone-error');
+        const passwordError = document.getElementById('password-error');
+        const aiModal = document.getElementById('ai-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+        const toastMessage = document.getElementById('toast-message');
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phonePattern = /^\d{10}$/;
+
+        const showToast = (message, isError = false) => {
+            toastMessage.textContent = message;
+            toastMessage.classList.add('show');
+            if (isError) {
+                toastMessage.classList.add('error');
+            } else {
+                toastMessage.classList.remove('error');
+            }
+            setTimeout(() => {
+                toastMessage.classList.remove('show');
+            }, 3000);
+        };
+
+        const showScreen = (screenId) => {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) targetScreen.classList.add('active');
+        };
+
+        const showError = (element, show) => {
+            element.style.display = show ? 'block' : 'none';
+        };
+
+        const updateSelectedCount = () => {
+            document.getElementById('selected-count').textContent = `Selected Seats: ${selectedSeats.length}`;
+        };
+
+        const toggleConfirmButton = () => {
+            confirmBtn.disabled = selectedSeats.length === 0;
+        };
+
+        const generateBookingId = () => ('CC' + Math.random().toString(36).substr(2, 8).toUpperCase());
+
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const emailPhone = emailPhoneInput.value.trim();
+            const password = passwordInput.value;
+            let isEmailValid = emailPattern.test(emailPhone);
+            let isPhoneValid = phonePattern.test(emailPhone);
+            let isPasswordValid = password.length >= 8 && password.length <= 12;
+
+            showError(emailPhoneError, !isEmailValid && !isPhoneValid);
+            showError(passwordError, !isPasswordValid);
+
+            if ((isEmailValid || isPhoneValid) && isPasswordValid) {
+                currentUser = emailPhone;
+                showScreen('event-screen');
+            }
+        });
+
+        const logout = () => {
+            currentUser = null;
+            currentEvent = null;
+            selectedSeats = [];
+            bookingId = null;
+            emailPhoneInput.value = '';
+            passwordInput.value = '';
+            showScreen('login-screen');
+        };
+
+        const showProfile = () => {
+            document.getElementById('profile-username').innerText = currentUser;
+            document.getElementById('profile-name').value = localStorage.getItem(`profileName-${currentUser}`) || '';
+            document.getElementById('profile-phone').value = localStorage.getItem(`profilePhone-${currentUser}`) || '';
+            renderBookedTickets();
+            showScreen('profile-screen');
+        };
+
+        const savePersonalInfo = () => {
+            localStorage.setItem(`profileName-${currentUser}`, document.getElementById('profile-name').value);
+            localStorage.setItem(`profilePhone-${currentUser}`, document.getElementById('profile-phone').value);
+            showToast('Personal info saved successfully!');
+        };
+
+        const renderBookedTickets = () => {
+            const bookedTicketsList = document.querySelector('#booked-tickets-list .ticket-list');
+            bookedTicketsList.innerHTML = '';
+            const allTickets = JSON.parse(localStorage.getItem(`bookedTickets-${currentUser}`)) || [];
+
+            if (allTickets.length === 0) {
+                bookedTicketsList.innerHTML = '<p>You have no booked tickets yet.</p>';
+                return;
+            }
+
+            allTickets.forEach(ticket => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <p><b>Event:</b> ${ticket.event}</p>
+                    <p><b>Seats:</b> ${ticket.seats.join(", ")}</p>
+                    <p><b>Date & Time:</b> ${ticket.date} at ${ticket.time}</p>
+                    <p><b>Booking ID:</b> ${ticket.bookingId}</p>
+                `;
+                bookedTicketsList.appendChild(li);
+            });
+        };
+
+        const selectEvent = (eventName) => {
+            currentEvent = eventName;
+            selectedSeats = [];
+            document.getElementById('event-title').innerText = eventName;
+            renderSeats();
+            showScreen('seat-screen');
+        };
+
+        const renderSeats = () => {
+            seatGrid.innerHTML = '';
+            const bookedSeats = JSON.parse(localStorage.getItem(currentEvent)) || [];
+            const fragment = document.createDocumentFragment();
+            for (let i = 1; i <= 50; i++) {
+                const seat = document.createElement('div');
+                seat.className = 'seat';
+                seat.textContent = i;
+                seat.dataset.seatNumber = i;
+
+                if (bookedSeats.includes(i)) {
+                    seat.classList.add('booked');
+                }
+                fragment.appendChild(seat);
+            }
+            seatGrid.appendChild(fragment);
+            updateSelectedCount();
+            toggleConfirmButton();
+        };
+
+        seatGrid.addEventListener('click', (e) => {
+            const seat = e.target.closest('.seat');
+            if (!seat || seat.classList.contains('booked')) return;
+
+            const seatNumber = parseInt(seat.dataset.seatNumber, 10);
+            const seatIndex = selectedSeats.indexOf(seatNumber);
+
+            if (seatIndex > -1) {
+                selectedSeats.splice(seatIndex, 1);
+                seat.classList.remove('selected');
+            } else {
+                selectedSeats.push(seatNumber);
+                seat.classList.add('selected');
+            }
+            updateSelectedCount();
+            toggleConfirmButton();
+        });
+
+        const confirmBooking = () => {
+            if (selectedSeats.length === 0) return;
+
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Booking...';
+
+            setTimeout(() => {
+                let bookedSeats = JSON.parse(localStorage.getItem(currentEvent)) || [];
+                const alreadyTaken = selectedSeats.some(seat => bookedSeats.includes(seat));
+
+                if (alreadyTaken) {
+                    showToast('Some selected seats were just booked. Please select different seats.', true);
+                    selectedSeats = [];
+                    renderSeats();
+                    confirmBtn.textContent = 'Confirm Booking';
+                    return;
+                }
+
+                bookedSeats.push(...selectedSeats);
+                localStorage.setItem(currentEvent, JSON.stringify(bookedSeats));
+                bookingId = generateBookingId();
+                const details = eventDetails[currentEvent];
+
+                // Save the new booking to the user's history
+                const userBookings = JSON.parse(localStorage.getItem(`bookedTickets-${currentUser}`)) || [];
+                userBookings.push({
+                    event: currentEvent,
+                    seats: selectedSeats,
+                    date: details.date,
+                    time: details.time,
+                    bookingId: bookingId
+                });
+                localStorage.setItem(`bookedTickets-${currentUser}`, JSON.stringify(userBookings));
+
+                document.getElementById('ticket-user').innerText = currentUser;
+                document.getElementById('ticket-event').innerText = currentEvent;
+                document.getElementById('ticket-date').innerText = details.date;
+                document.getElementById('ticket-time').innerText = details.time;
+                document.getElementById('ticket-seats').innerText = selectedSeats.join(", ");
+                document.getElementById('ticket-booking-id').innerText = bookingId;
+
+                // Set thank you message
+                document.getElementById('ticket-header').innerText = "✅ Booking Confirmed!";
+                document.getElementById('thank-you-message').innerText = "Thank you for booking! We can't wait to see you there.";
+
+                const qrContainer = document.getElementById("qrcode");
+                qrContainer.innerHTML = "";
+                const qrText = `BookingID: ${bookingId}\nEvent: ${currentEvent}\nSeats: ${selectedSeats.join(", ")}`;
+                new QRCode(qrContainer, {
+                    text: qrText,
+                    width: 128,
+                    height: 128
+                });
+
+                showScreen('ticket-screen');
+                confirmBtn.textContent = 'Confirm Booking';
+            }, 500);
+        };
+
+        const resetBooking = () => {
+            selectedSeats = [];
+            bookingId = null;
+            showScreen('event-screen');
+        };
+
+        const goBackToEvents = () => {
+            selectedSeats = [];
+            showScreen('event-screen');
+        };
+
+        const downloadPDF = () => {
+            const {
+                jsPDF
+            } = window.jspdf;
+            const doc = new jsPDF();
+            const qrCanvas = document.querySelector("#qrcode canvas");
+
+            doc.setFontSize(20);
+            doc.text("CodeClashTix Event Ticket", 105, 20, null, null, "center");
+
+            doc.setFontSize(12);
+            doc.text(`User: ${document.getElementById('ticket-user').innerText}`, 20, 40);
+            doc.text(`Show: ${document.getElementById('ticket-event').innerText}`, 20, 50);
+            doc.text(`Date: ${document.getElementById('ticket-date').innerText} at ${document.getElementById('ticket-time').innerText}`, 20, 60);
+            doc.text(`Seats: ${document.getElementById('ticket-seats').innerText}`, 20, 70);
+            doc.text(`Booking ID: ${document.getElementById('ticket-booking-id').innerText}`, 20, 80);
+
+            if (qrCanvas) {
+                doc.addImage(qrCanvas.toDataURL("image/png"), "PNG", 140, 35, 50, 50);
+            }
+
+            doc.save(`Ticket-${bookingId}.pdf`);
+        };
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === currentEvent && document.getElementById('seat-screen').classList.contains('active')) {
+                renderSeats();
+                selectedSeats = [];
+                toggleConfirmButton();
+            }
+        });
+
+        // --- THEME LOGIC ---
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        const storedTheme = localStorage.getItem('theme');
+        const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+        const getSystemTheme = () => {
+            return prefersDarkScheme.matches ? 'dark' : 'light';
+        };
+
+        const applyTheme = (themeName) => {
+            const body = document.body;
+            themeBtns.forEach(btn => btn.classList.remove('active'));
+
+            if (themeName === 'dark' || (themeName === 'system' && getSystemTheme() === 'dark')) {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+
+            const activeBtn = document.querySelector(`.theme-btn[data-theme="${themeName}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+        };
+
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.dataset.theme;
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+            });
+        });
+
+        // Initial theme application on load
+        if (storedTheme) {
+            applyTheme(storedTheme);
+        } else {
+            // Default to light if no theme is stored
+            applyTheme('light');
+        }
+
+        // Listen for system theme changes if set to 'system'
+        prefersDarkScheme.addEventListener('change', (e) => {
+            if (localStorage.getItem('theme') === 'system') {
+                applyTheme('system');
+            }
+        });
+
+
+        // --- MODAL FUNCTIONS ---
+        const openModal = () => aiModal.classList.add('open');
+        const closeModal = () => aiModal.classList.remove('open');
+
+        // --- GEMINI API INTEGRATIONS ---
+
+        // Generates an event summary for the event cards
+        async function generateEventSummary(eventName) {
+            const summaryElement = document.getElementById(eventName.toLowerCase().replace(/\s/g, '-') + '-summary');
+            if (!summaryElement) return;
+
+            summaryElement.textContent = 'Generating summary...';
+
+            const prompt = `Generate a concise and engaging summary for a college fest event titled "${eventName}". The summary should be short, about 2-3 sentences. It should tell the user what to expect, the general vibe, and encourage them to book a ticket. Do not include specific dates or times.`;
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({
+                    role: "user",
+                    parts: [{
+                        text: prompt
+                    }]
+                });
+                const payload = {
+                    contents: chatHistory
+                };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    summaryElement.textContent = generatedText;
+                } else {
+                    summaryElement.textContent = 'Failed to generate summary.';
+                    console.error('API response was not as expected.', result);
+                }
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                summaryElement.textContent = 'Error generating summary. Please try again later.';
+            }
+        }
+
+        // Generates fun ideas for a booked event
+        async function getEventIdeas() {
+            modalTitle.textContent = `Fun Ideas for ${currentEvent}`;
+            modalContent.innerHTML = '<div><p>Generating ideas...</p><span class="loading-spinner"></span></div>';
+            openModal();
+
+            const prompt = `Generate a list of 3-5 creative and fun ideas for a person attending the college fest event titled "${currentEvent}". The ideas should be formatted as a numbered list and could include things like:
+            - Conversation starters or icebreakers
+            - Themed playlist suggestions (list 3-5 songs)
+            - What to wear or bring
+            - Fun facts about the event type`;
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({
+                    role: "user",
+                    parts: [{
+                        text: prompt
+                    }]
+                });
+                const payload = {
+                    contents: chatHistory
+                };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    // Convert the markdown numbered list into an HTML list
+                    const listItems = generatedText.split('\n').filter(line => line.match(/^\d+\.\s/)).map(line => `<li>${line.substring(3).trim()}</li>`).join('');
+                    modalContent.innerHTML = `<p>Here are some creative ideas to make your experience even better:</p><ul>${listItems}</ul>`;
+                } else {
+                    modalContent.innerHTML = '<p>Failed to generate ideas. Please try again later.</p>';
+                    console.error('API response was not as expected.', result);
+                }
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                modalContent.innerHTML = '<p>Error generating ideas. Please try again later.</p>';
+            }
+        }
+    </script>
+</body>
+
+</html>
